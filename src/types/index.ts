@@ -34,3 +34,25 @@ export interface IOrder extends IOrdersDelivery, IOrdersContacts {
 	total: number | null;
 	items: string[];
 }
+
+//Запросы на сервер
+export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
+
+//Интерфейс успешной оплаты
+export interface IOrderSuccess {
+	id: string;
+	total: number | null;
+}
+
+//Ответ от сервера
+export type ApiListResponse<Type> = {
+	total: number;
+	items: Type[];
+};
+
+//Методы для Api
+export interface ILarekApi {
+	getProductList: () => Promise<ICard[]>;
+	getProductItem: (id: string) => Promise<ICard>;
+	orderProducts: (order: IOrder) => Promise<IOrderSuccess>;
+}
