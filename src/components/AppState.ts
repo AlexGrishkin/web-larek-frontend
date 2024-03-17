@@ -66,7 +66,8 @@ export class AppState extends Model<IAppStatus> {
 		this.emitChanges('preview:changed', item);
 	}
 	//Заполняем форму доставки и сопосба оплаты, а также валидируем поля ввода, если валидация успешна, то уведомляем подписчиков о изменении модели
-	//То есть здесь по факту метод присваивает соответсвующему свойству объекта this.order значение введенное в соответсвующее поле формы и затем validateDeliveryForm() проверяет действительно ли это поле заполнено или нет
+	//То есть здесь по факту метод присваивает соответсвующему свойству объекта this.order значение, введенное в соответсвующее поле формы и затем validateDeliveryForm() проверяет действительно ли это поле заполнено или нет
+	//keyof IDeliveryForm будет представлять собой тип, который содержит все ключи этого объекта, то есть address | paymend
 	setDeliveryForm(field: keyof IDeliveryForm, value: string) {
 		this.order[field] = value;
 		if (this.validateDeliveryForm()) {
