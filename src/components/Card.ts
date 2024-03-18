@@ -40,6 +40,7 @@ export class Card extends Component<ICard> {
 		this._button = container.querySelector(`.${blockname}__button`);
 		this._count = container.querySelector(`.${blockname}__item-index`);
 		//если кнопка найдена, присваиваем ей обработчик, если нет присваиваем обработчик карточке
+		//такой код позволяет нам гибко устанавливать обработчики событий в зависимости от нужного контекста
 		if (actions?.onClick) {
 			if (this._button) {
 				this._button.addEventListener('click', actions.onClick);
