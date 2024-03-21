@@ -6,6 +6,7 @@ import { categories } from '../utils/constants';
 export class Card extends Component<ICard> {
 	//Это компонент отображение поэтому при типизации полей мы уже используем непосредственно соответствующий элемент страницы
 	//Почему ставим знаки вопроса здесь _category? потому что у нас в макете в зависимости от контекста отображения карточки могут использовать разные данные, например в корзине нет картинки, категории, описания
+	//Но в случае если мы применим к protected _description?: HTMLElement; метод ensureElement для инициализации, то мы столкнемся с критической ошибкой, поскольку это предусмотрено методом, даже с учетом что вернет undefined. Обычный querySelector позволит избежать этого и просто вернет undefined
 	protected _category?: HTMLElement;
 	protected _title: HTMLElement;
 	protected _image?: HTMLImageElement;
@@ -27,16 +28,10 @@ export class Card extends Component<ICard> {
 			`.${blockname}__category`,
 			container
 		);
-		this._title = container.querySelector(`.${blockname}__title`);
-		this._image = ensureElement<HTMLImageElement>(
-			`.${blockname}__image`,
-			container
-		);
-		this._price = container.querySelector(`.${blockname}__price`);
-		this._description = ensureElement<HTMLElement>(
-			`.${blockname}__text`,
-			container
-		);
+		this._title = ensureElement<HTMLElement>(`.${blockname}__title`, container);
+		this._image = container.querySelector(`.${blockname}__image`);
+		this._price = ensureElement<HTMLElement>(`.${blockname}__price`, container);
+		this._description = container.querySelector(`.${blockname}__text`);
 		this._button = container.querySelector(`.${blockname}__button`);
 		this._count = container.querySelector(`.${blockname}__item-index`);
 		//если кнопка найдена, присваиваем ей обработчик, если нет присваиваем обработчик карточке

@@ -9,6 +9,10 @@ import {
 
 import { Model } from './base/Model';
 
+export type CatalogChangeEvent = {
+	catalog: ICard[];
+};
+
 export class AppState extends Model<IAppStatus> {
 	catalog: ICard[];
 	basket: ICard[] = [];
