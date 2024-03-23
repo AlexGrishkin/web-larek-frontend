@@ -1,5 +1,7 @@
 # Проектная работа "Веб-ларек"
 
+https://github.com/AlexGrishkin/web-larek-frontend.git
+
 Стек: HTML, SCSS, TS, Webpack
 
 Структура проекта:
