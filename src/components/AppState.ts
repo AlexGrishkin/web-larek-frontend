@@ -74,9 +74,6 @@ export class AppState extends Model<IAppStatus> {
 	//keyof IDeliveryForm будет представлять собой тип, который содержит все ключи этого объекта, то есть address | paymend
 	setDeliveryForm(field: keyof IDeliveryForm, value: string) {
 		this.order[field] = value;
-		if (this.validateDeliveryForm()) {
-			this.events.emit('deliveryForm:changed', { order: this.order });
-		}
 	}
 
 	//Валидируем форму доставки и способа оплаты
@@ -89,14 +86,17 @@ export class AppState extends Model<IAppStatus> {
 			errors.payment = 'Необходимо выбрать способ оплаты';
 		}
 		this.formErrors = errors;
-		this.events.emit('formErrors:changed', { formErrors: this.formErrors });
+		this.events.emit('formErrors:changed', this.formErrors);
+		this.events.emit('deliveryForm:changed', this.formErrors);
+		console.log(this.formErrors);
 		return Object.keys(errors).length === 0;
 	}
+
 	//Аналогично форме доставки, только здесь для формы контактных данных
 	setContactsForm(field: keyof IContactsForm, value: string) {
 		this.order[field] = value;
 		if (this.validateContactsForm()) {
-			this.events.emit('contactsForm:changed', { order: this.order });
+			this.events.emit('contactsForm:changed', this.formErrors);
 		}
 	}
 
@@ -110,7 +110,8 @@ export class AppState extends Model<IAppStatus> {
 			errors.email = 'Необходимо указать почту';
 		}
 		this.formErrors = errors;
-		this.events.emit('formErrors:changed', { formErrors: this.formErrors });
+		this.events.emit('formErrors:changed', this.formErrors);
+		this.events.emit('contactsForm:changed', this.formErrors);
 		return Object.keys(errors).length === 0;
 	}
 }

@@ -98,11 +98,11 @@ export class Card extends Component<ICard> {
 	get price(): number {
 		return Number(this._price.textContent) || null;
 	}
-	//Устанавливаем для элемента отвечающего за отображение количества товара в корзине текстовый контент
+	//Устанавливаем для элемента отвечающего за отображение номера в корзине текстовый контент
 	set index(value: string) {
 		this._count.textContent = value;
 	}
-	//Получаем количество товаров в корзине
+	//Получаем номер товара в корзине
 	get index(): string {
 		return this._count.textContent || '';
 	}
@@ -116,9 +116,5 @@ export class Card extends Component<ICard> {
 	//Получаем категорию товара из карточки
 	get category() {
 		return this._category.textContent || '';
-	}
-	//Метод который лочит кнопку
-	setDisabled() {
-		this._button.disabled = true;
 	}
 }

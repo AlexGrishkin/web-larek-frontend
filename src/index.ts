@@ -81,6 +81,8 @@ events.on('card:select', (item: ICard) => {
 //Когда все по цепочке произошло, создается темплейт для превью а затем в модальном окне рендерится содержимое текущей карточки
 //Здесь также генерится событие item:check и передается объект с данными карточки item - это понадобится для проверки в корзине ли товар
 events.on('preview:changed', (item: ICard) => {
+	const buttonText =
+		dataModel.basket.indexOf(item) < 0 ? addToBasketText : removeFromBasketText;
 	const card = new Card('card', cloneTemplate(cardPreviewTemplate), {
 		onClick: () => {
 			events.emit('item:check', item);
@@ -93,28 +95,31 @@ events.on('preview:changed', (item: ICard) => {
 
 	modal.render({
 		content: card.render({
+			button: buttonText,
 			...item,
 		}),
 	});
 });
 
+//Проверяем в корзине ли товар
 events.on('item:check', (item: ICard) => {
 	dataModel.basket.indexOf(item) < 0
 		? events.emit('item:add', item)
 		: events.emit('item:delete', item);
 });
 
+//Добавить в корзину
 events.on('item:add', (item: ICard) => {
 	dataModel.addItemToBasket(item);
 });
 
+//Удалить из корзины
 events.on('item:delete', (item: ICard) => {
 	dataModel.deleteItemToBasket(item);
 });
 
+//Отображаем карточки в корзине
 events.on('basket:changed', (items: ICard[]) => {
-	console.log(items);
-	// console.log(Array.isArray(items));
 	basket.items = items.map((item, index) => {
 		const card = new Card('card', cloneTemplate(cardBasketTemplate), {
 			onClick: () => {
@@ -129,8 +134,6 @@ events.on('basket:changed', (items: ICard[]) => {
 		if (indexElement) {
 			indexElement.textContent = (index + 1).toString();
 		}
-		console.log(cardElement);
-
 		return cardElement;
 	});
 
@@ -138,18 +141,19 @@ events.on('basket:changed', (items: ICard[]) => {
 	dataModel.order.total = dataModel.getTotal();
 });
 
-//Изменение счетчика
+//Изменение счетчика корзины
 events.on('count:changed', () => {
 	mainPage.counter = dataModel.basket.length;
 });
 
-//Открытие корзины
+//Открытие корзины с главной страницы
 events.on('basket:open', () => {
 	modal.render({
 		content: basket.render({}),
 	});
 });
 
+//Отображаем форму с адресом и способом оплаты
 events.on('order:open', () => {
 	modal.render({
 		content: deliveryFormContainer.render({
@@ -161,22 +165,26 @@ events.on('order:open', () => {
 	dataModel.order.items = dataModel.basket.map((item) => item.id);
 });
 
-//тут где то ошибка, если вбиваем сначала адресс то не разлочится кнопка
+//Работаем со способом оплаты
 events.on('paymend:changed', (target: HTMLButtonElement) => {
 	if (!target.classList.contains('button_alt-active')) {
 		deliveryFormContainer.tooglePaymendButtons(target);
 		dataModel.order.payment = target.getAttribute('name');
-		// console.log(dataModel);
+		// Проверяем и обновляем состояние формы доставки
+		dataModel.validateDeliveryForm();
 	}
 });
 
+//Работаем с адресом доставки
 events.on(
 	/^order\..*:change/,
 	(data: { field: keyof IDeliveryForm; value: string }) => {
 		dataModel.setDeliveryForm(data.field, data.value);
+		dataModel.validateDeliveryForm();
 	}
 );
 
+//Валидируем форму и разлочиваем кнопку, выводим ошибки если что-то не так
 events.on('deliveryForm:changed', (errors: Partial<IDeliveryForm>) => {
 	const { payment, address } = errors;
 	deliveryFormContainer.valid = !payment && !address;
@@ -185,11 +193,9 @@ events.on('deliveryForm:changed', (errors: Partial<IDeliveryForm>) => {
 		.join('; ');
 });
 
-events.on('ordersDelivery:changed', () => {
-	deliveryFormContainer.valid = true;
-});
-
+//Сабмитим данные формы доставки и способа оплаты и отрисовываем следующую форму
 events.on('order:submit', () => {
+	deliveryFormContainer.clearPaymentSelection();
 	modal.render({
 		content: contactsFormContainer.render({
 			valid: false,
@@ -222,8 +228,8 @@ events.on('ordersContacts:changed', () => {
 	contactsFormContainer.valid = true;
 });
 
+//Отправлчем данные заказа на сервер
 events.on('contacts:submit', () => {
-	console.log(dataModel.order);
 	api
 		.postOrderProduct(dataModel.order)
 		.then((result) => {
@@ -242,6 +248,7 @@ events.on('contacts:submit', () => {
 		.catch((error) => {
 			console.error(error);
 		});
+	dataModel.order.payment = '';
 });
 
 // Блокируем прокрутку страницы если открыта модалка
@@ -254,6 +261,7 @@ events.on('modal:close', () => {
 	mainPage.locked = false;
 });
 
+//Получаем данные с сервера
 api
 	.getProductList()
 	.then(dataModel.setCatalog.bind(dataModel))

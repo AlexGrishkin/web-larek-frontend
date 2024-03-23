@@ -30,10 +30,14 @@ export class deliveryForm extends Form<IDeliveryForm> {
 			value;
 	}
 
-	// Когда метод класса объявлен как private, он автоматически привязывается к экземпляру класса, поэтому вызовы этого метода из обработчиков событий будут работать корректно без явного использования bind
 	tooglePaymendButtons(changeButton: HTMLButtonElement): void {
 		this._onlinePaymend.classList.remove('button_alt-active');
 		this._cashPaymend.classList.remove('button_alt-active');
 		changeButton.classList.add('button_alt-active');
+	}
+
+	clearPaymentSelection() {
+		this._onlinePaymend.classList.remove('button_alt-active');
+		this._cashPaymend.classList.remove('button_alt-active');
 	}
 }
