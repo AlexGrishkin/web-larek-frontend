@@ -12,3 +12,16 @@ export const categories: { [key: string]: string } = {
 	дополнительное: 'card__category_additional',
 	другое: 'card__category_other',
 };
+
+export const addToBasketText = 'В корзину';
+export const removeFromBasketText = 'Убрать из корзины';
+
+export const deliveryFormObj = {
+	paymend: '',
+	address: '',
+};
+
+export const contactsFormObj = {
+	email: '',
+	phone: '',
+};

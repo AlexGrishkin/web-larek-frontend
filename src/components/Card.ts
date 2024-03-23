@@ -24,10 +24,7 @@ export class Card extends Component<ICard> {
 		//Конструктор родительского класса Component принимает контейнер элемента с которым работаем
 		super(container);
 		//
-		this._category = ensureElement<HTMLElement>(
-			`.${blockname}__category`,
-			container
-		);
+		this._category = container.querySelector(`.${blockname}__category`);
 		this._title = ensureElement<HTMLElement>(`.${blockname}__title`, container);
 		this._image = container.querySelector(`.${blockname}__image`);
 		this._price = ensureElement<HTMLElement>(`.${blockname}__price`, container);
@@ -112,7 +109,9 @@ export class Card extends Component<ICard> {
 	//Устанавливаем категорию товара для соответствующего элемента карточки
 	set category(value: string) {
 		this.setText(this._category, value);
-		this._category.classList.add(categories[value]);
+		if (this._category) {
+			this._category.classList.add(categories[value]);
+		}
 	}
 	//Получаем категорию товара из карточки
 	get category() {

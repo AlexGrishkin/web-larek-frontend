@@ -21,7 +21,7 @@ export class AppState extends Model<IAppStatus> {
 	//В коде я инициализирую order объектом типа IOrder, устанавливая начальные значения свойств этого объекта. Такая инициализация предоставляет  гарантию, что объект order будет иметь все необходимые свойства address, payment, phone, email, total и items, и они будут иметь соответствующие начальные значения.
 	order: IOrder = {
 		address: '',
-		paymend: '',
+		payment: '',
 		phone: '',
 		email: '',
 		total: 0,
@@ -37,16 +37,16 @@ export class AppState extends Model<IAppStatus> {
 	//Когда отправляется событие, которое сообщает о изменении конкретного состояния или объекта, хорошей практикой является явное указание, что именно изменилось. В данном случае, события передавались в виде объекта { basket: this.basket }, чтобы получатели могли точно знать, что именно изменилось - в данном случае, это состояние корзины.
 	addItemToBasket(item: ICard) {
 		this.basket.indexOf(item) < 0 ? this.basket.push(item) : false;
-		this.emitChanges('basket:changed', { basket: this.basket });
-		this.emitChanges('count:changed', { basket: this.basket });
+		this.emitChanges('basket:changed', this.basket);
+		this.emitChanges('count:changed', this.basket);
 	}
 
 	//Здесь находим в нашем массиве корзины элемент который хотим удялять находим его индекс через indexOf и удаляем из массива методом splice
 	deleteItemToBasket(item: ICard) {
 		const index = this.basket.indexOf(item);
 		this.basket.splice(index, 1);
-		this.emitChanges('basket:changed', { basket: this.basket });
-		this.emitChanges('count:changed', { basket: this.basket });
+		this.emitChanges('basket:changed', this.basket);
+		this.emitChanges('count:changed', this.basket);
 	}
 
 	//Высчитываем общую стоимость товаров, важно здесь точно удостоверится что item это объект типа ICard
@@ -59,8 +59,8 @@ export class AppState extends Model<IAppStatus> {
 	//Очищаем корзину когда отправили данные заказа на сервер
 	clearBasket() {
 		this.basket = [];
-		this.emitChanges('basket:changed', { basket: this.basket });
-		this.emitChanges('count:changed', { basket: this.basket });
+		this.emitChanges('basket:changed', this.basket);
+		this.emitChanges('count:changed', this.basket);
 	}
 
 	// В методе setPreview, когда вызывается emitChanges('preview:changed', item), предполагается, что элемент item содержит всю необходимую информацию о предварительном просмотре, включая его идентификатор (id). Поэтому нет необходимости передавать { preview: this.preview } в качестве данных события.
@@ -75,7 +75,7 @@ export class AppState extends Model<IAppStatus> {
 	setDeliveryForm(field: keyof IDeliveryForm, value: string) {
 		this.order[field] = value;
 		if (this.validateDeliveryForm()) {
-			this.events.emit('order:ready', { order: this.order });
+			this.events.emit('deliveryForm:changed', { order: this.order });
 		}
 	}
 
@@ -85,8 +85,8 @@ export class AppState extends Model<IAppStatus> {
 		if (!this.order.address) {
 			errors.address = 'Необходимо указать адресс';
 		}
-		if (!this.order.paymend) {
-			errors.paymend = 'Необходимо выбрать способ оплаты';
+		if (!this.order.payment) {
+			errors.payment = 'Необходимо выбрать способ оплаты';
 		}
 		this.formErrors = errors;
 		this.events.emit('formErrors:changed', { formErrors: this.formErrors });
@@ -96,7 +96,7 @@ export class AppState extends Model<IAppStatus> {
 	setContactsForm(field: keyof IContactsForm, value: string) {
 		this.order[field] = value;
 		if (this.validateContactsForm()) {
-			this.events.emit('order:ready', { order: this.order });
+			this.events.emit('contactsForm:changed', { order: this.order });
 		}
 	}
 

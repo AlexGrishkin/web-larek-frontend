@@ -51,7 +51,7 @@ export interface IFormState {
 //Интерфейс для формы с адресом доставки и способом оплаты
 export interface IDeliveryForm {
 	address: string;
-	paymend: string;
+	payment: string;
 }
 
 //Интерфейс для формы с почтой и телефоном

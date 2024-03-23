@@ -7,9 +7,17 @@ import { Page } from './components/Page';
 import { EventEmitter } from './components/base/events';
 import { Basket } from './components/common/Basket';
 import { Modal } from './components/common/Modal';
+import { Success } from './components/common/Success';
 import './scss/styles.scss';
-import { ICard } from './types';
-import { API_URL, CDN_URL } from './utils/constants';
+import { ICard, IContactsForm, IDeliveryForm } from './types';
+import {
+	API_URL,
+	CDN_URL,
+	addToBasketText,
+	contactsFormObj,
+	deliveryFormObj,
+	removeFromBasketText,
+} from './utils/constants';
 import { cloneTemplate, ensureElement } from './utils/utils';
 
 const events = new EventEmitter();
@@ -32,7 +40,12 @@ const modal = new Modal(modalContainerTemplate, events);
 const basket = new Basket(cloneTemplate(basketTemplate), events);
 const deliveryFormContainer = new deliveryForm(
 	cloneTemplate(deliveryFormTemplate),
-	events
+	events,
+	{
+		onClick: (event: Event) => {
+			events.emit('paymend:changed', event.target);
+		},
+	}
 );
 const contactsFormContainer = new contactsForm(
 	cloneTemplate(contactsFormTemplate),
@@ -46,6 +59,7 @@ const contactsFormContainer = new contactsForm(
 //Обновляется все в соответствующем контейнере, потому что все элементы инициализированы в контексте контейнера который мы передали в конструктор экземпляра класса
 //В данном случае оператор расширения используется для создания копии объекта item. Он распаковывает все свойства из объекта item и создает новый объект с теми же свойствами и их значениями
 //на каждую карточку из каталога (на контейнер который передаем в конструктор) навешивается обработчик события card:select. здесь мы уже знаем что каждый item содержит информацию о карточке
+//В контексте класса Card, _category является приватным полем, а category может быть реализовано как свойство, которое предоставляет доступ к этому полю через геттеры и сеттеры.
 events.on<CatalogChangeEvent>('items:changed', () => {
 	mainPage.catalog = dataModel.catalog.map((item) => {
 		const card = new Card('card', cloneTemplate(cardCatalogTemplate), {
@@ -71,17 +85,173 @@ events.on('preview:changed', (item: ICard) => {
 		onClick: () => {
 			events.emit('item:check', item);
 			card.button =
-				dataModel.basket.indexOf(item) < 0 ? 'В корзину' : 'Убрать из корзины';
+				dataModel.basket.indexOf(item) < 0
+					? addToBasketText
+					: removeFromBasketText;
 		},
 	});
 
 	modal.render({
 		content: card.render({
-			button:
-				dataModel.basket.indexOf(item) < 0 ? 'В корзину' : 'Убрать из корзины',
 			...item,
 		}),
 	});
+});
+
+events.on('item:check', (item: ICard) => {
+	dataModel.basket.indexOf(item) < 0
+		? events.emit('item:add', item)
+		: events.emit('item:delete', item);
+});
+
+events.on('item:add', (item: ICard) => {
+	dataModel.addItemToBasket(item);
+});
+
+events.on('item:delete', (item: ICard) => {
+	dataModel.deleteItemToBasket(item);
+});
+
+events.on('basket:changed', (items: ICard[]) => {
+	console.log(items);
+	// console.log(Array.isArray(items));
+	basket.items = items.map((item, index) => {
+		const card = new Card('card', cloneTemplate(cardBasketTemplate), {
+			onClick: () => {
+				events.emit('item:delete', item);
+			},
+		});
+		const cardElement = card.render({
+			...item,
+		});
+
+		const indexElement = cardElement.querySelector('.basket__item-index');
+		if (indexElement) {
+			indexElement.textContent = (index + 1).toString();
+		}
+		console.log(cardElement);
+
+		return cardElement;
+	});
+
+	basket.total = dataModel.getTotal();
+	dataModel.order.total = dataModel.getTotal();
+});
+
+//Изменение счетчика
+events.on('count:changed', () => {
+	mainPage.counter = dataModel.basket.length;
+});
+
+//Открытие корзины
+events.on('basket:open', () => {
+	modal.render({
+		content: basket.render({}),
+	});
+});
+
+events.on('order:open', () => {
+	modal.render({
+		content: deliveryFormContainer.render({
+			valid: false,
+			errors: [],
+			...deliveryFormObj,
+		}),
+	});
+	dataModel.order.items = dataModel.basket.map((item) => item.id);
+});
+
+//тут где то ошибка, если вбиваем сначала адресс то не разлочится кнопка
+events.on('paymend:changed', (target: HTMLButtonElement) => {
+	if (!target.classList.contains('button_alt-active')) {
+		deliveryFormContainer.tooglePaymendButtons(target);
+		dataModel.order.payment = target.getAttribute('name');
+		// console.log(dataModel);
+	}
+});
+
+events.on(
+	/^order\..*:change/,
+	(data: { field: keyof IDeliveryForm; value: string }) => {
+		dataModel.setDeliveryForm(data.field, data.value);
+	}
+);
+
+events.on('deliveryForm:changed', (errors: Partial<IDeliveryForm>) => {
+	const { payment, address } = errors;
+	deliveryFormContainer.valid = !payment && !address;
+	deliveryFormContainer.errors = Object.values({ payment, address })
+		.filter((i) => !!i)
+		.join('; ');
+});
+
+events.on('ordersDelivery:changed', () => {
+	deliveryFormContainer.valid = true;
+});
+
+events.on('order:submit', () => {
+	modal.render({
+		content: contactsFormContainer.render({
+			valid: false,
+			errors: [],
+			...contactsFormObj,
+		}),
+	});
+	dataModel.order.items = dataModel.basket.map((item) => item.id);
+});
+
+//Изменения в полях ввода контактов
+events.on(
+	/^contacts\..*:change/,
+	(data: { field: keyof IContactsForm; value: string }) => {
+		dataModel.setContactsForm(data.field, data.value);
+	}
+);
+
+//Валидация формы ввода контактов
+events.on('contactsForm:changed', (errors: Partial<IContactsForm>) => {
+	const { email, phone } = errors;
+	contactsFormContainer.valid = !email && !phone;
+	contactsFormContainer.errors = Object.values({ email, phone })
+		.filter((i) => !!i)
+		.join('; ');
+});
+
+//Валидация формы контактов выполнена
+events.on('ordersContacts:changed', () => {
+	contactsFormContainer.valid = true;
+});
+
+events.on('contacts:submit', () => {
+	console.log(dataModel.order);
+	api
+		.postOrderProduct(dataModel.order)
+		.then((result) => {
+			dataModel.clearBasket();
+			const success = new Success(cloneTemplate(succesOrderTemplate), {
+				onClick: () => {
+					modal.close();
+				},
+			});
+			console.log(result);
+			success.total = result.total.toString();
+			modal.render({
+				content: success.render({}),
+			});
+		})
+		.catch((error) => {
+			console.error(error);
+		});
+});
+
+// Блокируем прокрутку страницы если открыта модалка
+events.on('modal:open', () => {
+	mainPage.locked = true;
+});
+
+// ... и разблокируем
+events.on('modal:close', () => {
+	mainPage.locked = false;
 });
 
 api
