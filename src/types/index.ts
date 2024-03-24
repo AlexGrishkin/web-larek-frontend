@@ -68,14 +68,6 @@ export interface IOrder extends IDeliveryForm, IContactsForm {
 	items: string[];
 }
 
-//Интерфейс для успешной формы оплаты
-export interface ISuccessForm {
-	image: string;
-	title: string;
-	total: number | null;
-	description: string;
-}
-
 // -----------------------------------------------------------МОДЕЛЬ ДАННЫХ-----------------------------------------------------------
 
 //Этот тип данных будет необходим для валидации форм оплаты и контактов
@@ -110,7 +102,7 @@ export interface ILarekApi {
 //Интерфейс промиса после отправки данных заказа на сервер. У тотала null потому что может быть оформлен бесценный товар
 export interface ISuccess {
 	id: string;
-	total: number | null;
+	total: number;
 }
 
 export interface ISuccessActions {

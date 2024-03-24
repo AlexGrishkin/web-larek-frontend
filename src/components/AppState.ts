@@ -88,7 +88,6 @@ export class AppState extends Model<IAppStatus> {
 		this.formErrors = errors;
 		this.events.emit('formErrors:changed', this.formErrors);
 		this.events.emit('deliveryForm:changed', this.formErrors);
-		console.log(this.formErrors);
 		return Object.keys(errors).length === 0;
 	}
 

@@ -81,18 +81,37 @@ events.on('card:select', (item: ICard) => {
 //Когда все по цепочке произошло, создается темплейт для превью а затем в модальном окне рендерится содержимое текущей карточки
 //Здесь также генерится событие item:check и передается объект с данными карточки item - это понадобится для проверки в корзине ли товар
 events.on('preview:changed', (item: ICard) => {
-	const buttonText =
-		dataModel.basket.indexOf(item) < 0 ? addToBasketText : removeFromBasketText;
-	const card = new Card('card', cloneTemplate(cardPreviewTemplate), {
-		onClick: () => {
+	let buttonText;
+	let onClickHandler;
+
+	// Проверяем, равна ли цена null
+	if (item.price === null) {
+		// Если цена равна null, блокируем кнопку и меняем текст
+		buttonText = 'Товар не продается';
+		onClickHandler = () => {
+			// Ничего не делаем при клике на заблокированной кнопке
+		};
+	} else {
+		// Если цена не равна null, используем обычную логику
+		buttonText =
+			dataModel.basket.indexOf(item) < 0
+				? addToBasketText
+				: removeFromBasketText;
+		onClickHandler = () => {
 			events.emit('item:check', item);
 			card.button =
 				dataModel.basket.indexOf(item) < 0
 					? addToBasketText
 					: removeFromBasketText;
-		},
+		};
+	}
+
+	// Создаем карточку с соответствующими кнопкой и обработчиком клика
+	const card = new Card('card', cloneTemplate(cardPreviewTemplate), {
+		onClick: onClickHandler,
 	});
 
+	// Рендерим модальное окно с карточкой
 	modal.render({
 		content: card.render({
 			button: buttonText,
@@ -239,7 +258,6 @@ events.on('contacts:submit', () => {
 					modal.close();
 				},
 			});
-			console.log(result);
 			success.total = result.total.toString();
 			modal.render({
 				content: success.render({}),
@@ -249,6 +267,9 @@ events.on('contacts:submit', () => {
 			console.error(error);
 		});
 	dataModel.order.payment = '';
+	dataModel.order.address = '';
+	dataModel.order.email = '';
+	dataModel.order.phone = '';
 });
 
 // Блокируем прокрутку страницы если открыта модалка

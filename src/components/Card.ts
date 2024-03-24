@@ -1,6 +1,6 @@
 import { ICard, ICardActions } from '../types/index';
 import { Component } from './base/Component';
-import { ensureAllElements, ensureElement } from '../utils/utils';
+import { ensureElement } from '../utils/utils';
 import { categories } from '../utils/constants';
 
 export class Card extends Component<ICard> {
