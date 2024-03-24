@@ -19,7 +19,7 @@ https://github.com/AlexGrishkin/web-larek-frontend.git
 - src/utils/constants.ts — файл с константами
 - src/utils/utils.ts — файл с утилитами
 
-## Установка и запуск
+## Установка и запуск проекта
 
 Для установки и запуска проекта необходимо выполнить команды
 
